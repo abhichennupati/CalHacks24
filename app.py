@@ -52,6 +52,62 @@ def api_get_source_paper_links():
     except Exception as e:
         return jsonify({"error": "An error occurred"}), 500
 
+@app.route('/add_paper', methods=['POST'])
+def api_add_paper():
+    data = request.json
+    text = data.get('text')
+    title = data.get('title')
+    owner = data.get('owner')
+
+    if title is None or text is None or owner is None:
+        return jsonify({'error': "missing field"}), 400
+
+    try:
+        conn = get_db_connection()
+        paper_id = add_paper(conn, title, text, owner)
+        conn.close()
+        return jsonify({'id': paper_id})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.route('/add_paper', methods=['POST'])
+def api_update_paper():
+    data = request.json
+    paper_id = data.get('id')
+    text = data.get('text')
+    title = data.get('title')
+
+    if title is None or text is None or paper_id is None:
+        return jsonify({'error': "missing field"})
+
+    try:
+        conn = get_db_connection()
+        update_paper(conn, paper_id, title, text)
+        conn.close()
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": "An error occurred"}), 500
+
+@app.route('/add_source', methods=['POST'])
+def api_add_source():
+    data = request.json
+    paper_id = data.get('paper_id')
+    url = data.get('url')
+    title = data.get('title')
+
+    if title is None or url is None or paper_id is None:
+        return jsonify({'error': "missing field"}), 400
+
+    try:
+        conn = get_db_connection()
+        source_id = add_source(conn, title, url, paper_id)
+        conn.close()
+        return jsonify({'id': source_id})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": "An error occurred"}), 500
+
 # Running the Flask app
 if __name__ == '__main__':
     app.run(debug=True)

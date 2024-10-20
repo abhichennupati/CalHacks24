@@ -46,7 +46,6 @@ def add_source(conn, title: str, url: str, paper_id: int):
         source_id = cursor.lastrowid
         print(f"Inserted new source with ID: {source_id}")
 
-    print("heres the source id")
     print(source_id)
 
     # Link the source to the paper
@@ -58,6 +57,8 @@ def add_source(conn, title: str, url: str, paper_id: int):
     conn.commit()
     cursor.close()
 
+    return source_id
+
 
 
 
@@ -65,13 +66,15 @@ def add_source(conn, title: str, url: str, paper_id: int):
 def add_paper(conn, title: str, text: str, owner: str):
 	cursor = conn.cursor()
 	embedding = get_embedding_from_paper(title, text)
+	print("made embedding")
 	query = """
 		INSERT INTO Papers (title, text, embedding, owner)
 		VALUES (%s, %s, %s, %s)
 	"""
 
-	cursor.execute(query, (title, text, embedding, owner))
-	
+	embedding_json = json.dumps(embedding)
+	cursor.execute(query, (title, text, embedding_json, owner))
+	print("executed cursor")
 	paper_id = cursor.lastrowid
 	conn.commit()
 	cursor.close()
@@ -84,12 +87,13 @@ def update_paper(conn, paper_id: int, title: str, text: str):
     embedding = get_embedding_from_paper(title, text)
 
     query = """
-        UPDATE papers
-        SET title = ?, text = ?, embedding = ?
-        WHERE id = ?
+        UPDATE Papers
+        SET title = %s, text = %s, embedding = %s
+        WHERE id = %s
     """
 
-    cursor.execute(query, (title, text, embedding, paper_id))
+    embedding_json = json.dumps(embedding)
+    cursor.execute(query, (title, text, embedding_json, paper_id))
     conn.commit()
     cursor.close()
 
@@ -100,7 +104,7 @@ def get_similar_papers(conn, paper_id: int):
     query = """
         SELECT embedding 
         FROM papers 
-        WHERE id = ?
+        WHERE id = %s
     """
     cursor.execute(query, (paper_id,))
     paper_embedding = cursor.fetchone()
@@ -134,8 +138,8 @@ def get_source_papers(conn, source_id: int):
 
 	query = """ 
 		SELECT paper_id
-		FROM papers_sources
-		WHERE source_id = ?;
+		FROM Papers_Sources
+		WHERE source_id = %s;
 	"""
 
 	cursor.execute(query, (source_id,))
@@ -232,5 +236,5 @@ def get_embeddings(text):
 if __name__ == '__main__':
     conn = get_db_connection()
     print(conn)
-    add_source(conn, "machine learning wikipedia", "https://en.wikipedia.org/wiki/Machine_learning", 0)
+    papers = get_source_papers(conn, 1125899906842629)
     conn.close()
