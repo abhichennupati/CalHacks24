@@ -108,3 +108,56 @@ def api_add_source():
         conn.close()
         return jsonify({"error": "An error occurred"}), 500
 
+# API endpoint for retrieving all papers owned by a specific user
+@app.route('/get_user_papers', methods=['POST'])
+def api_get_user_papers():
+    data = request.json
+    user = data.get('user')
+
+    if user is None:
+        return jsonify({'error': "missing field: user"}), 400
+
+    try:
+        conn = get_db_connection()
+        user_papers = get_user_papers(conn, user)
+        conn.close()
+
+        return jsonify({"papers": user_papers})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": "An error occurred"}), 500
+
+
+# API endpoint for retrieving all sources linked to a specific paper
+@app.route('/get_paper_sources', methods=['POST'])
+def api_get_paper_sources():
+    data = request.json
+    paper_id = data.get('paper_id')
+
+    if paper_id is None:
+        return jsonify({'error': "missing field: paper_id"}), 400
+
+    try:
+        conn = get_db_connection()
+        paper_sources = get_paper_sources(conn, paper_id)
+        conn.close()
+
+        return jsonify({"sources": paper_sources})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": "An error occurred"}), 500
+
+
+# API endpoint for retrieving all papers in the database
+@app.route('/get_all_papers', methods=['POST'])
+def api_get_all_papers():
+    try:
+        conn = get_db_connection()
+        all_papers = get_all_papers(conn)
+        conn.close()
+
+        return jsonify({"papers": all_papers})
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": "An error occurred"}), 500
+

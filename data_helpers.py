@@ -137,6 +137,72 @@ def get_source_papers(conn, source_id: int):
 
 	return papers
 
+# Retrieve all papers from the Papers table
+def get_all_papers(conn):
+    cursor = conn.cursor()
+
+    query = """
+        SELECT id, title, text, owner
+        FROM Papers
+    """
+    cursor.execute(query)
+    papers = cursor.fetchall()
+    cursor.close()
+
+    # Format papers into a list of dictionaries
+    all_papers = [
+        {"id": paper[0], "title": paper[1], "text": paper[2], "owner": paper[3]}
+        for paper in papers
+    ]
+
+    return all_papers
+
+
+# Retrieve all sources linked to a specific paper
+def get_paper_sources(conn, paper_id):
+    cursor = conn.cursor()
+
+    query = """
+        SELECT s.id, s.title, s.url
+        FROM Sources s
+        JOIN Papers_Sources ps ON s.id = ps.source_id
+        WHERE ps.paper_id = %s
+    """
+    cursor.execute(query, (paper_id,))
+    sources = cursor.fetchall()
+    cursor.close()
+
+    # Format sources into a list of dictionaries
+    paper_sources = [
+        {"id": source[0], "title": source[1], "url": source[2]}
+        for source in sources
+    ]
+
+    return paper_sources
+
+
+# Retrieve all papers owned by a specific user
+def get_user_papers(conn, user: str):
+    cursor = conn.cursor()
+
+    query = """
+        SELECT id, title, text
+        FROM Papers
+        WHERE owner = %s
+    """
+    cursor.execute(query, (user,))
+    user_papers = cursor.fetchall()
+    cursor.close()
+
+    # Format papers into a list of dictionaries
+    papers = [
+        {"id": paper[0], "title": paper[1], "text": paper[2]}
+        for paper in user_papers
+    ]
+
+    return papers
+
+
 
 
 # utility functions NEED TODO
@@ -201,5 +267,5 @@ def get_embeddings(text):
 if __name__ == '__main__':
     conn = get_db_connection()
     print(conn)
-    papers = add_paper(conn, "who is venkat arun", "berkeley boy", "Abhi")
+    print(get_paper_sources(conn, 2251799813685254))
     conn.close()
