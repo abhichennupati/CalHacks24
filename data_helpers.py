@@ -1,9 +1,6 @@
 import singlestoredb as s2
 from urllib.parse import urlparse, urlunparse
 import json
-from transformers import DistilBertModel, DistilBertTokenizer
-import torch
-import numpy as np
 import os
 
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
@@ -201,36 +198,12 @@ def split_text(text, max_length=512):
 
 # Function to get embeddings
 def get_embeddings(text):
-    # Split the text into chunks of 512 tokens
-    inputs = tokenizer(text, return_tensors='pt', truncation=False, padding=True)
-    chunk_size = 512
-    input_ids_chunks = list(inputs['input_ids'][0].split(chunk_size))
-    attention_mask_chunks = list(inputs['attention_mask'][0].split(chunk_size))
-    
-    embeddings_list = []
+    url = "http://147.182.163.168:6969/embed"
+    data = {"text": text}
+    headers = {"Content-Type": "application/json"}
 
-    for input_ids, attention_mask in zip(input_ids_chunks, attention_mask_chunks):
-        # Add batch dimension
-        input_ids = input_ids.unsqueeze(0)
-        attention_mask = attention_mask.unsqueeze(0)
-        
-        # Move to device
-        input_ids = input_ids.to(device)
-        attention_mask = attention_mask.to(device)
-        
-        with torch.no_grad():
-            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            embeddings = outputs.last_hidden_state
-            # Use attention mask to calculate mean
-            mask = attention_mask.unsqueeze(-1).expand(embeddings.size()).float()
-            sum_embeddings = torch.sum(embeddings * mask, 1)
-            sum_mask = torch.clamp(mask.sum(1), min=1e-9)
-            chunk_embedding = (sum_embeddings / sum_mask).squeeze(0)
-            embeddings_list.append(chunk_embedding.cpu().numpy())
-    
-    # Average the embeddings from all chunks
-    final_embedding = np.mean(embeddings_list, axis=0)
-    return final_embedding.tolist()
+    response = requests.post(url, data=json.dumps(data), headers=headers)
+    return response.json(
 
 
 if __name__ == '__main__':
