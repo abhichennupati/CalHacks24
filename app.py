@@ -71,7 +71,7 @@ def api_add_paper():
         conn.close()
         return jsonify({"error": "An error occurred"}), 500
 
-@app.route('/add_paper', methods=['POST'])
+@app.route('/update_paper', methods=['POST'])
 def api_update_paper():
     data = request.json
     paper_id = data.get('id')
@@ -108,6 +108,3 @@ def api_add_source():
         conn.close()
         return jsonify({"error": "An error occurred"}), 500
 
-# Running the Flask app
-if __name__ == '__main__':
-    app.run(debug=False)
