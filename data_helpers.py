@@ -2,15 +2,7 @@ import singlestoredb as s2
 from urllib.parse import urlparse, urlunparse
 import json
 import os
-
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-model = DistilBertModel.from_pretrained('distilbert-base-uncased')
-
-# Move model to GPU if available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-
-
+import requests
 
 def get_db_connection():
     conn = s2.connect(os.getenv("SINGLESTORE_KEY"))
@@ -196,18 +188,18 @@ def split_text(text, max_length=512):
     
     return chunks
 
-# Function to get embeddings
+# Function to get embeddingss
 def get_embeddings(text):
     url = "http://147.182.163.168:6969/embed"
     data = {"text": text}
     headers = {"Content-Type": "application/json"}
 
     response = requests.post(url, data=json.dumps(data), headers=headers)
-    return response.json(
-
+    print(response.json()['embeddings'])
+    return response.json()['embeddings']
 
 if __name__ == '__main__':
     conn = get_db_connection()
     print(conn)
-    papers = get_source_papers(conn, 1125899906842629)
+    papers = add_paper(conn, "who is venkat arun", "berkeley boy", "Abhi")
     conn.close()
